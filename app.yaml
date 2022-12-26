@@ -1,0 +1,5 @@
+config:
+  service:
+  endpoint:
+    otel_http:
+

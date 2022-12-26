@@ -1,0 +1,88 @@
+# Created by https://www.gitignore.io
+
+### Go ###
+# Binaries for programs and plugins
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Project-local glide cache
+.glide/
+
+### Lua ###
+# Compiled Lua sources
+luac.out
+
+# luarocks build files
+*.src.rock
+*.zip
+*.tar.gz
+
+# Object files
+*.o
+*.os
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+*.def
+*.exp
+
+# Shared objects (inc. Windows DLLs)
+*.so.*
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Garbage files
+Desktop.ini
+Thumbs.db
+.DS_Store
+
+# Reference files
+.ref/
+
+# IDE/Editor files
+.idea/
+*.sublime-workspace
+debug
+debug.json
+__debug_*
+
+# Runtime data files
+*.log
+
+# Test artifacts
+.cover
+
+# Auto generate files
+vendor
+*.md5
+*.sha1
+*.sha256
+
+### Docker Compose ###
+# Storage
+data/
