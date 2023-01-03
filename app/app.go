@@ -23,7 +23,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // name is the Tracer name used to identify this instrumentation library.
@@ -51,7 +50,6 @@ func (a *App) Run(ctx context.Context) error {
 
 	n, err := a.Poll(newCtx)
 	if err != nil {
-		span.End()
 		return err
 	}
 
@@ -85,8 +83,7 @@ func (a *App) Poll(ctx context.Context) (uint, error) {
 
 // Write writes the n-th Fibonacci number back to the user.
 func (a *App) Write(ctx context.Context, n uint) {
-	var span trace.Span
-	ctx, span = otel.Tracer(a.lib).Start(ctx, "Write")
+	newCtx, span := otel.Tracer(a.lib).Start(ctx, "Write")
 	defer span.End()
 
 	f, err := func(ctx context.Context) (uint64, error) {
@@ -100,7 +97,7 @@ func (a *App) Write(ctx context.Context, n uint) {
 		nStr := strconv.FormatUint(uint64(f), 10)
 		span.SetAttributes(attribute.String("result", nStr))
 		return f, err
-	}(ctx)
+	}(newCtx)
 	if err != nil {
 		a.c.String(http.StatusOK, "Fibonacci(%d): %v, TraceID: %s\n", n, err, span.SpanContext().TraceID())
 	} else {

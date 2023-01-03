@@ -16,11 +16,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"otel-demo/app"
 	"otel-demo/trace"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
@@ -28,8 +30,8 @@ import (
 )
 
 func main() {
-	tp := trace.Setup()
-
+	tpOption := trace.Setup()
+	tp := trace.NewSession(tpOption)
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
 			log.Fatal(err)
@@ -37,9 +39,52 @@ func main() {
 	}()
 
 	server := gin.Default()
+	server.GET("/test", test)
+	server.GET("/batch_test", batchTest)
 	server.GET("/fib", fib)
 	server.GET("/loop_fib", loop_fib)
 	server.Run(":8888")
+}
+
+func test(c *gin.Context) {
+	traceID := simpleTrace(c)
+	c.String(http.StatusOK, "Just test traceID: %s\n", traceID)
+}
+
+func batchTest(c *gin.Context) {
+	numStr, exist := c.GetQuery("t")
+	var num int
+	if !exist {
+		num = 1000
+	} else {
+		num, _ = strconv.Atoi(numStr)
+	}
+
+	start := time.Now()
+	for i := 0; i < num; i++ {
+		simpleTrace(c)
+	}
+	end := time.Now()
+	fmt.Println(end.Sub(start).Seconds())
+	fmt.Println("num:", num)
+}
+
+func simpleTrace(ctx context.Context) string {
+	_, span := otel.Tracer("test").Start(ctx, "start")
+	// for i := 0; i < 200; i++ {
+	// 	span.AddEvent(fmt.Sprintf("event %d", i))
+	// }
+	span.End()
+	return span.SpanContext().TraceID().String()
+}
+
+func complexTrace(ctx context.Context) string {
+	_, span := otel.Tracer("test").Start(ctx, "start")
+	// for i := 0; i < 200; i++ {
+	// 	span.AddEvent(fmt.Sprintf("event %d", i))
+	// }
+	span.End()
+	return span.SpanContext().TraceID().String()
 }
 
 func fib(c *gin.Context) {
