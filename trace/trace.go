@@ -84,6 +84,7 @@ func NewSession(tracerProviders []trace.TracerProviderOption) *trace.TracerProvi
 // newOTLPGrpcExporter returns am otlp exporter.
 func newOTLPGrpcExporter(ctx context.Context, endpoint string, additionalOpts ...otlptracegrpc.Option) (*otlptrace.Exporter, error) {
 	opts := []otlptracegrpc.Option{
+		otlptracegrpc.WithHeaders(map[string]string{"X-Test-Routing": "routing"}),
 		otlptracegrpc.WithEndpoint(endpoint),
 	}
 
