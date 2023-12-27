@@ -52,7 +52,7 @@ func ubt(c *gin.Context) {
 
 func ubtTracingData(count int64) {
 	st := time.Now()
-	timeStart, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T00:00:00.000Z")
+	timeStart, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T01:19:00.000Z")
 	timeEnd, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T23:59:00.000Z")
 
 	ts := timeStart
@@ -99,5 +99,5 @@ func sendUbtTraceToIPP(t time.Time, count int) {
 
 		span.End(go_trace.WithTimestamp(traceData.Timestamp.Add(time.Duration(traceData.ResponseTime) * time.Millisecond)))
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 }

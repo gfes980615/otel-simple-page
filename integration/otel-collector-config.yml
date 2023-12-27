@@ -23,8 +23,13 @@ exporters:
 
 processors:
   batch:
-    timeout: 200ms
-    send_batch_size: 20000
+    timeout: 1s
+    send_batch_size: 30000
+
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 50
+    spike_limit_percentage: 20
 
 service:
   telemetry:
