@@ -5,18 +5,26 @@ receivers:
       http:
 
 exporters:
-  otlp:
-    endpoint:
-    tls:
-      insecure: true
-
-  jaeger:
-    endpoint: "jaeger:14250"
-    tls:
-      insecure: true
+  clickhouse:
+    endpoint: tcp://10.132.124.237:9000
+    database: ipplab
+    username: default
+    password: ippclickhousetest
+    ttl: 72h
+    logs_table_name: otel_logs
+    traces_table_name: otel_trace_exporter
+    metrics_table_name: otel_metrics
+    timeout: 5s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
 
 processors:
   batch:
+    timeout: 200ms
+    send_batch_size: 20000
 
 service:
   telemetry:
@@ -25,5 +33,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [jaeger]
+      processors:
+        - batch
+      exporters:
+        - clickhouse

@@ -1,5 +1,5 @@
 config:
-  service:
+  service: local-test
   endpoint:
-    otel_http:
+    otel_http: localhost:4318
 

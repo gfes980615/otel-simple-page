@@ -18,20 +18,21 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"otel-demo/app"
+	"math/rand"
+	"otel-demo/lib"
 	"otel-demo/trace"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/attribute"
+	go_trace "go.opentelemetry.io/otel/trace"
 )
 
 func main() {
-	tpOption := trace.Setup()
-	tp := trace.NewSession(tpOption)
+	tp := trace.Setup()
+
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
 			log.Fatal(err)
@@ -39,80 +40,64 @@ func main() {
 	}()
 
 	server := gin.Default()
-	server.GET("/test", test)
-	server.GET("/batch_test", batchTest)
-	server.GET("/fib", fib)
-	server.GET("/loop_fib", loop_fib)
+	server.GET("/ubt", ubt)
 	server.Run(":8888")
 }
 
-func test(c *gin.Context) {
-	traceID := simpleTrace(c)
-	c.String(http.StatusOK, "Just test traceID: %s\n", traceID)
+func ubt(c *gin.Context) {
+	count, _ := c.GetQuery("count")
+	cnt, _ := strconv.ParseInt(count, 10, 64)
+	ubtTracingData(cnt)
 }
 
-func batchTest(c *gin.Context) {
-	numStr, exist := c.GetQuery("t")
-	var num int
-	if !exist {
-		num = 1000
-	} else {
-		num, _ = strconv.Atoi(numStr)
+func ubtTracingData(count int64) {
+	st := time.Now()
+	timeStart, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T00:00:00.000Z")
+	timeEnd, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T23:59:00.000Z")
+
+	ts := timeStart
+	for {
+		t := ts
+		sendUbtTraceToIPP(t, 10)
+		ts = ts.Add(60 * time.Second)
+		if ts.After(timeEnd) {
+			break
+		}
 	}
 
-	start := time.Now()
-	for i := 0; i < num; i++ {
-		simpleTrace(c)
+	fmt.Println("Done: ", time.Since(st))
+	fmt.Println("--------------------")
+}
+
+func sendUbtTraceToIPP(t time.Time, count int) {
+	for i := 0; i < 70000; i++ {
+		traceData := lib.GenRawData(t)
+		operationName := "local-test"
+		_, span := otel.Tracer(traceData.ServiceName).Start(context.Background(), operationName,
+			go_trace.WithTimestamp(traceData.Timestamp.Add(time.Duration(rand.Intn(60))*time.Second)))
+
+		span.SetAttributes(attribute.KeyValue{
+			Key:   attribute.Key("x-customer-id"),
+			Value: attribute.StringValue(traceData.CustomerID),
+		})
+		span.SetAttributes(attribute.KeyValue{
+			Key:   attribute.Key("x-cpid"),
+			Value: attribute.StringValue(traceData.Cpid),
+		})
+		span.SetAttributes(attribute.KeyValue{
+			Key:   attribute.Key("http.url"),
+			Value: attribute.StringValue(traceData.API),
+		})
+		span.SetAttributes(attribute.KeyValue{
+			Key:   attribute.Key("http.method"),
+			Value: attribute.StringValue(traceData.HTTPMethod),
+		})
+		span.SetAttributes(attribute.KeyValue{
+			Key:   attribute.Key("http.status_code"),
+			Value: attribute.StringValue(traceData.HTTPStatusCode),
+		})
+
+		span.End(go_trace.WithTimestamp(traceData.Timestamp.Add(time.Duration(traceData.ResponseTime) * time.Millisecond)))
 	}
-	end := time.Now()
-	fmt.Println(end.Sub(start).Seconds())
-	fmt.Println("num:", num)
-}
-
-func simpleTrace(ctx context.Context) string {
-	_, span := otel.Tracer("test").Start(ctx, "start")
-	// for i := 0; i < 200; i++ {
-	// 	span.AddEvent(fmt.Sprintf("event %d", i))
-	// }
-	span.End()
-	return span.SpanContext().TraceID().String()
-}
-
-func complexTrace(ctx context.Context) string {
-	_, span := otel.Tracer("test").Start(ctx, "start")
-	// for i := 0; i < 200; i++ {
-	// 	span.AddEvent(fmt.Sprintf("event %d", i))
-	// }
-	span.End()
-	return span.SpanContext().TraceID().String()
-}
-
-func fib(c *gin.Context) {
-	ctx, app := start(c, "fib")
-	app.Run(ctx)
-}
-
-func loop_fib(c *gin.Context) {
-	ctx, app := start(c, "loop_fib")
-	app.LoopRun(ctx)
-}
-
-func start(c *gin.Context, serviceName string) (context.Context, *app.App) {
-	ctx, span := otel.Tracer(serviceName).Start(c, "start")
-	defer span.End()
-
-	stringN, exist := c.GetQuery("n")
-	if !exist {
-		span.SetStatus(codes.Error, "No required query parameter: n")
-		c.String(http.StatusBadRequest, "%s", "No required query parameter n")
-		return ctx, nil
-	}
-	n, err := strconv.Atoi(stringN)
-	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		c.String(http.StatusBadRequest, "error: %v", err)
-		return ctx, nil
-	}
-
-	return ctx, app.NewApp(c, serviceName, uint(n))
+	time.Sleep(1 * time.Second)
 }
