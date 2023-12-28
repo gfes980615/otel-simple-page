@@ -45,20 +45,29 @@ func main() {
 }
 
 func ubt(c *gin.Context) {
-	count, _ := c.GetQuery("count")
-	cnt, _ := strconv.ParseInt(count, 10, 64)
-	ubtTracingData(cnt)
+	trafficPerMin, _ := c.GetQuery("traffic_per_min")
+	startTime, _ := c.GetQuery("start_time")
+	endTime, _ := c.GetQuery("end_time")
+	cnt, _ := strconv.ParseInt(trafficPerMin, 10, 64)
+	if cnt == 0 {
+		cnt = 70000
+	}
+	if startTime == "" || endTime == "" {
+		c.Error(fmt.Errorf("start_time and end_time are required"))
+		return
+	}
+	ubtTracingData(startTime, endTime, int(cnt))
 }
 
-func ubtTracingData(count int64) {
+func ubtTracingData(startTime, endTime string, trafficPerMin int) {
 	st := time.Now()
-	timeStart, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T01:19:00.000Z")
-	timeEnd, _ := time.Parse("2006-01-02T15:04:05.000Z", "2023-01-01T23:59:00.000Z")
+	timeStart, _ := time.Parse("2006-01-02T15:04:05.000Z", startTime)
+	timeEnd, _ := time.Parse("2006-01-02T15:04:05.000Z", endTime)
 
 	ts := timeStart
 	for {
 		t := ts
-		sendUbtTraceToIPP(t, 10)
+		sendUbtTraceToIPP(t, trafficPerMin)
 		ts = ts.Add(60 * time.Second)
 		if ts.After(timeEnd) {
 			break
@@ -69,12 +78,14 @@ func ubtTracingData(count int64) {
 	fmt.Println("--------------------")
 }
 
-func sendUbtTraceToIPP(t time.Time, count int) {
-	for i := 0; i < 70000; i++ {
+func sendUbtTraceToIPP(t time.Time, trafficPerMin int) {
+	for i := 0; i < trafficPerMin; i++ {
 		traceData := lib.GenRawData(t)
 		operationName := "local-test"
+		st := traceData.Timestamp.Add(time.Duration(rand.Intn(60)) * time.Second)
+		et := st.Add(time.Duration(traceData.ResponseTime) * time.Millisecond)
 		_, span := otel.Tracer(traceData.ServiceName).Start(context.Background(), operationName,
-			go_trace.WithTimestamp(traceData.Timestamp.Add(time.Duration(rand.Intn(60))*time.Second)))
+			go_trace.WithTimestamp(st))
 
 		span.SetAttributes(attribute.KeyValue{
 			Key:   attribute.Key("x-customer-id"),
@@ -97,7 +108,6 @@ func sendUbtTraceToIPP(t time.Time, count int) {
 			Value: attribute.StringValue(traceData.HTTPStatusCode),
 		})
 
-		span.End(go_trace.WithTimestamp(traceData.Timestamp.Add(time.Duration(traceData.ResponseTime) * time.Millisecond)))
+		span.End(go_trace.WithTimestamp(et))
 	}
-	time.Sleep(5 * time.Second)
 }

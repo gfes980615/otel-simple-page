@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"otel-demo/config"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -28,7 +29,12 @@ func Setup() *trace.TracerProvider {
 			l.Fatal(err)
 			return nil
 		}
-		tracerProviders = append(tracerProviders, trace.WithBatcher(otlpGrpcExp))
+		tracerProviders = append(tracerProviders,
+			trace.WithBatcher(otlpGrpcExp,
+				trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
+				trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
+				trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize)),
+		)
 	}
 
 	if endpoint := config.AppConfig.OtelHttpEndpoint; endpoint != "" {
@@ -37,7 +43,13 @@ func Setup() *trace.TracerProvider {
 			l.Fatal(err)
 			return nil
 		}
-		tracerProviders = append(tracerProviders, trace.WithBatcher(otlpHttpExp))
+		tracerProviders = append(tracerProviders,
+			trace.WithBatcher(otlpHttpExp,
+				trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
+				trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
+				trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize),
+			),
+		)
 	}
 
 	if endpoint := config.AppConfig.JaegerEndpoint; endpoint != "" {

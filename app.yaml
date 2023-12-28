@@ -2,4 +2,6 @@ config:
   service: local-test
   endpoint:
     otel_http: otel_collector:4318
-
+  exporter:
+    max_queue_size: 100000
+    batch_timeout: 1s

@@ -1,0 +1,12 @@
+sudo snap install docker
+git clone https://github.com/gfes980615/otel-simple-page.git
+cd otel-simple-page
+git checkout ubt-traffic-gen
+sudo docker build -t otel /home/ubuntu/otel-simple-page/.
+cd integration
+sudo docker-compose up -d
+sudo docker ps
+
+sudo docker logs -f
+
+curl http://127.0.0.1:8888/ubt
