@@ -11,9 +11,20 @@ exporters:
     username: default
     password: ippclickhousetest
     ttl: 72h
-    logs_table_name: otel_logs
     traces_table_name: otel_trace_exporter
-    metrics_table_name: otel_metrics
+    timeout: 5s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+  clickhouse/cluster:
+    endpoint: 10.132.124.249:9000,10.132.124.233:9000,10.132.124.244:9000
+    database: ipplab_cluster_db
+    username: default
+    password:
+    ttl: 72h
+    traces_table_name: distributed_otel_trace_exporter
     timeout: 5s
     retry_on_failure:
       enabled: true
@@ -42,3 +53,4 @@ service:
         - batch
       exporters:
         - clickhouse
+        - clickhouse/cluster
