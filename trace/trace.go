@@ -8,6 +8,7 @@ import (
 	"otel-demo/config"
 	"time"
 
+	"github.com/go-logr/stdr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -23,18 +24,19 @@ func Setup() *trace.TracerProvider {
 	l := log.New(os.Stdout, "", 0)
 	var tracerProviders []trace.TracerProviderOption
 
+	batchSpanProcessorOption := []trace.BatchSpanProcessorOption{
+		trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout) * time.Second),
+		trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout) * time.Second),
+		trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize),
+	}
+
 	if endpoint := config.AppConfig.OtelGrpcEndpoint; endpoint != "" {
 		otlpGrpcExp, err := newOTLPGrpcExporter(context.Background(), endpoint)
 		if err != nil {
 			l.Fatal(err)
 			return nil
 		}
-		tracerProviders = append(tracerProviders,
-			trace.WithBatcher(otlpGrpcExp,
-				trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
-				trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
-				trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize)),
-		)
+		tracerProviders = append(tracerProviders, trace.WithBatcher(otlpGrpcExp, batchSpanProcessorOption...))
 	}
 
 	if endpoint := config.AppConfig.OtelHttpEndpoint; endpoint != "" {
@@ -43,22 +45,7 @@ func Setup() *trace.TracerProvider {
 			l.Fatal(err)
 			return nil
 		}
-		tracerProviders = append(tracerProviders,
-			trace.WithBatcher(otlpHttpExp,
-				trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
-				trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout)*time.Second),
-				trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize),
-			),
-		)
-	}
-
-	if endpoint := config.AppConfig.JaegerEndpoint; endpoint != "" {
-		jaegerExp, err := newJaegerExporter(endpoint)
-		if err != nil {
-			l.Fatal(err)
-			return nil
-		}
-		tracerProviders = append(tracerProviders, trace.WithBatcher(jaegerExp))
+		tracerProviders = append(tracerProviders, trace.WithBatcher(otlpHttpExp, batchSpanProcessorOption...))
 	}
 
 	if service := config.AppConfig.Service; service != "" {
@@ -71,6 +58,7 @@ func Setup() *trace.TracerProvider {
 	tp := trace.NewTracerProvider(
 		tracerProviders...,
 	)
+	stdr.SetVerbosity(5)
 
 	otel.SetTracerProvider(tp)
 	return tp
