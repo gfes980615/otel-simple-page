@@ -4,4 +4,5 @@ config:
     otel_http: otel_collector:4318
   exporter:
     max_queue_size: 100000
-    batch_timeout: 1s
+    batch_timeout: 3s
+    max_export_batch_size: 50000

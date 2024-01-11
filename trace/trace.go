@@ -28,6 +28,7 @@ func Setup() *trace.TracerProvider {
 		trace.WithBatchTimeout(time.Duration(config.AppConfig.BatchTimeout) * time.Second),
 		trace.WithExportTimeout(time.Duration(config.AppConfig.BatchTimeout) * time.Second),
 		trace.WithMaxQueueSize(config.AppConfig.MaxQueueSize),
+		trace.WithMaxExportBatchSize(config.AppConfig.MaxExportBatchSize),
 	}
 
 	if endpoint := config.AppConfig.OtelGrpcEndpoint; endpoint != "" {
