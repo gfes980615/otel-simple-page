@@ -1,5 +1,8 @@
 config:
-  service:
+  service: local-test
   endpoint:
-    otel_http:
-
+    otel_http: eks-otel-http.ipp-dev.trendmicro.com
+  exporter:
+    max_queue_size: 50000
+    max_export_batch_size: 10000
+    batch_timeout: 1s

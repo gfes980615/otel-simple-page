@@ -85,6 +85,7 @@ func NewSession(tracerProviders []trace.TracerProviderOption) *trace.TracerProvi
 func newOTLPGrpcExporter(ctx context.Context, endpoint string, additionalOpts ...otlptracegrpc.Option) (*otlptrace.Exporter, error) {
 	opts := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithInsecure(),
 	}
 
 	opts = append(opts, additionalOpts...)
@@ -101,6 +102,7 @@ func newOTLPGrpcExporter(ctx context.Context, endpoint string, additionalOpts ..
 func newOTLPHttpExporter(ctx context.Context, endpoint string, additionalOpts ...otlptracehttp.Option) (*otlptrace.Exporter, error) {
 	opts := []otlptracehttp.Option{
 		otlptracehttp.WithEndpoint(endpoint),
+		// otlptracehttp.WithInsecure(),
 	}
 
 	opts = append(opts, additionalOpts...)

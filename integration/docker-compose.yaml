@@ -8,14 +8,15 @@ services:
       - "14268:14268"
       - "14250:14250"
       - "16686:16686"
+      - "4317:4317"
 
   otel_collector:
-    image: otel/opentelemetry-collector-contrib:0.64.0
+    image: otel/opentelemetry-collector-contrib:0.91.0
     volumes:
       - "./otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml"
     command: --config /etc/otelcol/otel-collector-config.yml
     ports:
-      - "4317:4317"
+
       - "4318:4318"
     depends_on:
       - jaeger

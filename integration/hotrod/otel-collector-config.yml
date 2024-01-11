@@ -10,12 +10,12 @@ exporters:
     tls:
       insecure: true
   clickhouse:
-    endpoint: tcp://10.132.124.237:9000
+    endpoint: https://clickhouse-single-http.ipp-dev.trendmicro.com:443
     database: ipplab
     username: default
-    password: ippclickhousetest
+    password: ipp1234
     ttl: 72h
-    traces_table_name: otel_trace_exporter
+    traces_table_name: otel_trace_lab
     timeout: 5s
     retry_on_failure:
       enabled: true
@@ -56,6 +56,6 @@ service:
       processors:
         - batch
       exporters:
-        # - clickhouse
-        - clickhouse/cluster
+        - clickhouse
+        # - clickhouse/cluster
         - otlp/jaeger
