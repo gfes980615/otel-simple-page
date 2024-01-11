@@ -5,32 +5,22 @@ receivers:
       http:
 
 exporters:
-  clickhouse:
-    endpoint: tcp://10.132.124.237:9000
-    database: ipplab
-    username: default
-    password: ippclickhousetest
-    ttl: 72h
-    traces_table_name: otel_trace_exporter
-    timeout: 5s
-    retry_on_failure:
-      enabled: true
-      initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
-  clickhouse/cluster:
-    endpoint: 10.132.124.249:9000,10.132.124.233:9000,10.132.124.244:9000
-    database: ipplab_cluster_db
-    username: default
-    password:
-    ttl: 72h
-    traces_table_name: distributed_otel_trace_exporter
-    timeout: 5s
-    retry_on_failure:
-      enabled: true
-      initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+  otlphttp/eks:
+    endpoint: https://eks-otel-http.ipp-dev.trendmicro.com:443
+
+  # clickhouse/cluster:
+  #   endpoint: https://clickhouse-shard-http.ipp-dev.trendmicro.com:443
+  #   database: ipplab
+  #   username: ippadmin
+  #   password: ippcluster81
+  #   ttl: 72h
+  #   traces_table_name: distributed_otel_trace_lab
+  #   timeout: 5s
+  #   retry_on_failure:
+  #     enabled: true
+  #     initial_interval: 5s
+  #     max_interval: 30s
+  #     max_elapsed_time: 300s
 
 processors:
   batch:
@@ -52,5 +42,5 @@ service:
       processors:
         - batch
       exporters:
-        - clickhouse
-        - clickhouse/cluster
+        # - clickhouse/cluster
+        - otlphttp/eks

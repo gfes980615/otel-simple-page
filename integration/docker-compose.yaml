@@ -15,9 +15,9 @@ services:
     networks:
       - otel
 
-  ubt_traffic:
-    image: otel
-    ports:
-      - "8888:8888"
-    networks:
-      - otel
+  # ubt_traffic:
+  #   image: otel
+  #   ports:
+  #     - "8888:8888"
+  #   networks:
+  #     - otel
