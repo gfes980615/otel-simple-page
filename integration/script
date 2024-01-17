@@ -10,3 +10,7 @@ sudo docker ps
 sudo docker logs -f
 
 curl http://127.0.0.1:8888/ubt\?start_time\="2024-01-01T00:00:00.000Z"\&end_time\="2024-01-01T23:59:00.000Z"\&traffic_per_min\=70000
+
+curl http://127.0.0.1:8888/ubtv2\?traffic_per_sec\=1500\&duration\=3600
+
+sudo docker-compose down
