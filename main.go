@@ -61,9 +61,9 @@ func ubt(c *gin.Context) {
 }
 
 func ubtV2(c *gin.Context) {
-	trafficPerMin, _ := c.GetQuery("traffic_per_min")
+	trafficPerSec, _ := c.GetQuery("traffic_per_sec")
 	duration, _ := c.GetQuery("duration")
-	cnt, _ := strconv.ParseInt(trafficPerMin, 10, 64)
+	cnt, _ := strconv.ParseInt(trafficPerSec, 10, 64)
 	if cnt == 0 {
 		cnt = 70000
 	}
@@ -73,7 +73,7 @@ func ubtV2(c *gin.Context) {
 	}
 	for i := 0; i < int(dcnt); i++ {
 		sendUbtTraceCurrentTimeToIPP(time.Now(), int(cnt))
-		time.Sleep(1 * time.Minute)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -133,8 +133,8 @@ func sendUbtTraceToIPP(t time.Time, trafficPerMin int) {
 	}
 }
 
-func sendUbtTraceCurrentTimeToIPP(t time.Time, trafficPerMin int) {
-	for i := 0; i < trafficPerMin; i++ {
+func sendUbtTraceCurrentTimeToIPP(t time.Time, trafficPerSec int) {
+	for i := 0; i < trafficPerSec; i++ {
 		traceData := lib.GenRawData(t)
 		operationName := "local-test"
 		_, span := otel.Tracer(traceData.ServiceName).Start(context.Background(), operationName)
